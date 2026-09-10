@@ -1,7 +1,5 @@
 # AI-Assisted-Automative-Procurement-Optimization
-AI-Assisted Procurement decision-support model for automotive parts sourcing 
-# AI-Assisted Automotive Procurement Optimization
-
+AI-Assisted Procurement decision-support model for automotive parts sourcing
 AI-assisted procurement decision-support model for automotive parts sourcing.
 
 ## Project Overview
