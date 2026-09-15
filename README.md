@@ -1,42 +1,59 @@
-# AI-Assisted-Automotive-Procurement-Optimization
-AI-Assisted Procurement decision-support model for automotive parts sourcing
-AI-assisted procurement decision-support model for automotive parts sourcing.
 
-## Project Overview
+# AI-Assisted Automotive Procurement Optimization
 
-This project explores how data analysis, procurement rules, and optimization techniques can support better supplier selection and purchasing decisions in automotive parts procurement.
+## Overview
 
-The project starts with an Excel-based procurement model and is planned to evolve into a Python-based optimization and AI-assisted decision-support system.
+AI-Assisted Automotive Procurement Optimization is a data-driven procurement decision-support project designed to help companies make better supplier and purchasing decisions under real-world business constraints.
 
-The current version focuses on building a structured procurement dataset and calculating key purchasing indicators such as:
+The system is designed to move beyond simple "lowest-price supplier" selection.
 
-- MOQ compliance
-- EUR-normalized prices
-- Price range
-- Shipping cost per unit
-- Landed cost
-- Supplier/source risk
+Instead, it aims to answer a more strategic question:
 
-## Business Problem
+> How should procurement quantities be allocated across suppliers to achieve the best overall economic and operational outcome under cost, MOQ, lead-time, risk, capacity, and other business constraints?
 
-Automotive procurement decisions often involve multiple suppliers, different currencies, minimum order quantities, shipping costs, lead times, and varying levels of supplier risk.
+The long-term vision is a risk-aware procurement decision-support system that can recommend:
 
-Looking only at unit price can lead to poor purchasing decisions.
+- Which suppliers to use
+- How much to purchase from each supplier
+- Expected procurement cost
+- Expected operational risk
+- Constraint violations or limitations
+- The reasoning behind the recommendation
 
-For example, a supplier with a lower unit price may become more expensive after shipping costs, currency conversion, or other procurement constraints are considered.
+---
 
-This project aims to provide a more structured way to compare sourcing options.
+## Project Roadmap
 
-## Current Model
+The project is being developed incrementally:
 
-The current Excel model contains procurement data including:
+1. Excel Data Foundation
+2. Python Data Processing & Cost Modeling
+3. Mathematical Optimization
+4. Risk-Aware Optimization
+5. Machine Learning / AI Decision Support
+6. API / MVP Development
+7. ERP / SAP Integration
 
-- Part Number
-- Product Description
-- Manufacturer
+The project follows a practical principle:
+
+Data → Validation → Cost Model → Optimization → Risk → ML/AI → Enterprise Integration
+
+AI and machine learning will be introduced where they provide additional decision value beyond deterministic calculations and mathematical optimization.
+
+---
+
+# Phase 1 — Excel Data Foundation
+
+The first phase established a structured procurement dataset containing supplier, pricing, logistics, MOQ, lead-time, risk, quality, and sourcing information.
+
+The dataset includes supplier information such as:
+
 - Supplier
 - Supplier Country
-- Unit Price Range
+- Manufacturer
+- Part Number
+- Product Description
+- Unit Price
 - Currency
 - MOQ
 - Order Quantity
@@ -45,173 +62,511 @@ The current Excel model contains procurement data including:
 - HS Code
 - Shipping Cost
 - Quality Certification
-- Source
-- Risk Score
-- EUR Exchange Rate
+- Risk Information
+- Supplier Score
+- Source URL
+- Data Date
 
-The model then derives:
+The Excel model was used as the initial data foundation before moving the processing logic into Python.
 
-- MOQ Check
-- Minimum Price in EUR
-- Maximum Price in EUR
-- Price Range
-- Shipping Cost per Unit
-- Landed Cost Minimum
-- Landed Cost Maximum
-- Average Landed Cost
+---
 
-## Procurement Logic
+# Phase 2 — Python Data Processing & Cost Modeling
 
-The current model follows a simple procurement decision flow:
+## Objective
 
-Order Quantity
-→ MOQ Check
-→ Price Normalization
-→ Shipping Cost Allocation
-→ Landed Cost Calculation
-→ Risk Assessment
+The objective of Phase 2 was to move beyond spreadsheet-based calculations and establish a structured Python data-processing layer for the future procurement decision-support system.
 
-A supplier that does not meet the required MOQ is treated as infeasible for the selected order quantity.
+Python is used not only as a calculation engine, but also as a data validation and preparation layer before the data reaches the optimization engine.
 
-Landed cost is calculated by combining the normalized product price with the allocated shipping cost per unit.
+---
 
-## Risk Assessment
+## Implemented Capabilities
 
-The current model includes a source-based risk score.
+### 1. Excel Data Ingestion
 
-The score is an initial procurement assumption rather than a statistically validated risk model.
+Supplier data is loaded directly from the Excel workbook using Python and pandas.
 
-Established distribution sources are treated as lower-risk sources, while marketplace-based sourcing is assigned a higher preliminary risk due to greater dependence on individual suppliers and verification.
+The current implementation reads the procurement dataset from:
 
-This scoring methodology can be improved in future versions by incorporating additional supplier-level data such as:
+automotive_supplier_data.xlsx
 
-- Supplier history
-- Quality performance
-- Delivery reliability
-- Certification
+---
+
+### 2. Data Standardization
+
+Column names are automatically standardized into a consistent internal format.
+
+Examples:
+
+- Unit Price Min → unit_price_min
+- Shipping Cost Per Unit → shipping_cost_per_unit
+- Lead Time Days → lead_time_days
+
+The internal data model uses lowercase column names with underscores.
+
+This creates a stable data structure for future calculations, optimization models, APIs, and ERP integration.
+
+---
+
+### 3. Data Inspection and Validation
+
+The Python processing layer checks:
+
+- Dataset dimensions
+- Data types
+- Missing values
+- Procurement-related fields
+- Calculation readiness
+
+This provides an early validation layer before optimization.
+
+---
+
+### 4. Currency Normalization
+
+Supplier prices can be provided in different currencies.
+
+The current model normalizes unit prices into EUR using the corresponding exchange-rate data.
+
+The resulting fields include:
+
+- unit_price_min_eur
+- unit_price_max_eur
+
+This creates a common financial basis for supplier comparison and optimization.
+
+---
+
+### 5. Price Range Calculation
+
+The system calculates the price range between minimum and maximum supplier prices.
+
+This helps preserve pricing uncertainty instead of reducing the supplier's price immediately to a single value.
+
+The resulting field is:
+
+price_range
+
+---
+
+### 6. Shipping Cost per Unit
+
+Total shipping cost is converted into a per-unit value based on the planned order quantity.
+
+This allows logistics costs to be incorporated into the supplier cost model.
+
+The resulting field is:
+
+shipping_cost_per_unit
+
+---
+
+### 7. Landed Cost Modeling
+
+The system calculates estimated landed procurement cost by combining:
+
+- Normalized unit price
+- Shipping cost per unit
+
+The model currently produces:
+
+- landed_cost_min
+- landed_cost_max
+- landed_cost_avg_eur
+
+This creates a more realistic supplier comparison than using product price alone.
+
+---
+
+### 8. Automated MOQ Validation
+
+MOQ is treated as a procurement constraint rather than simply another cost variable.
+
+The system automatically validates whether the planned order quantity satisfies the supplier's minimum order quantity.
+
+Logic:
+
+order_quantity >= moq
+
+Results are classified as:
+
+- OK
+- Below MOQ
+
+This validation is performed programmatically rather than relying on manually entered spreadsheet indicators.
+
+---
+
+## Data Quality Principle
+
+One of the key lessons from Phase 2 is that data quality is as important as the optimization algorithm itself.
+
+A procurement dataset may contain valid raw numbers while still containing incorrect manually calculated indicators.
+
+Therefore, the system uses Python to:
+
+1. Load the data
+2. Standardize the structure
+3. Validate important fields
+4. Recalculate derived values
+5. Prepare reliable inputs for optimization
+
+This reduces the risk of feeding inconsistent information into the optimization model.
+
+---
+
+# Current System Architecture
+
+Supplier / Market Data
+        ↓
+Excel Data Foundation
+        ↓
+Python Data Processing
+        ↓
+Data Validation & Normalization
+        ↓
+Cost Modeling
+        ↓
+Optimization Engine
+        ↓
+Risk-Aware Procurement Decisions
+        ↓
+Future AI / ML Decision Support
+
+The architecture is intentionally modular so that future components can be added without rebuilding the entire system.
+
+---
+
+# Phase 3 — Mathematical Optimization
+
+The next development phase focuses on mathematical optimization.
+
+Instead of selecting the supplier with the lowest individual price, the system will determine an optimal procurement allocation.
+
+For example:
+
+Supplier A → 55%
+Supplier B → 30%
+Supplier C → 15%
+
+The exact allocation will depend on the input data and business constraints.
+
+---
+
+## Optimization Model
+
+The first optimization model will define four main elements:
+
+### Decision Variables
+
+Decision variables represent how much should be purchased from each supplier.
+
+For example:
+
+x1 = quantity purchased from Supplier A
+x2 = quantity purchased from Supplier B
+x3 = quantity purchased from Supplier C
+
+---
+
+### Objective Function
+
+The initial objective is to minimize total procurement cost.
+
+A simplified representation is:
+
+Minimize:
+
+Total Procurement Cost
+=
+Product Cost
++
+Shipping Cost
++
+Other Applicable Procurement Costs
+
+The model can later be extended to include risk and operational factors.
+
+---
+
+### Constraints
+
+Potential constraints include:
+
+- Total demand
+- Supplier MOQ
+- Supplier capacity
+- Procurement budget
+- Lead-time requirements
+- Supplier diversification
+- Risk limits
+- Delivery requirements
+
+This allows the optimization model to reflect real procurement decisions rather than a purely mathematical price comparison.
+
+---
+
+# Risk-Aware Optimization
+
+A future version will incorporate supplier and market risk into the optimization process.
+
+Potential risk factors include:
+
+- Supplier reliability
+- Delivery delays
 - Country risk
-- Payment terms
-- Historical order performance
+- Supply disruption
+- Quality performance
+- Price volatility
+- Capacity limitations
+- Logistics uncertainty
 
-## Why Excel First?
+The objective will eventually move from pure cost minimization toward a broader concept:
 
-Excel was selected as the first implementation environment because it is widely used in procurement and supply-chain operations.
+Minimize:
 
-The goal of the first stage is to validate the business logic before moving to a more automated analytical system.
+Expected Total Procurement Cost
++
+Risk Penalty
++
+Operational Penalty
 
-The Excel model therefore serves as the first Minimum Viable Product (MVP) of the project.
+The exact mathematical formulation will be developed after the initial optimization model is validated.
 
-## Planned Python Development
+---
 
-The next stage will move the analytical workflow into Python.
+# Machine Learning / AI Roadmap
 
-Planned components include:
+Machine learning and AI will be introduced after the deterministic optimization foundation is established.
 
-- Data cleaning and validation
-- Automated currency normalization
-- Cost normalization
-- Supplier scoring
-- Supplier ranking
-- Constraint handling
-- Optimization
-- Sensitivity analysis
-- Scenario analysis
-- Visualization
+Potential future capabilities include:
 
-Python will also make it possible to test different procurement scenarios and compare alternative supplier combinations programmatically.
+- Demand forecasting
+- Lead-time prediction
+- Supplier performance prediction
+- Price trend prediction
+- Risk prediction
+- Disruption probability estimation
+- Anomaly detection
+- Dynamic supplier scoring
+- Recommendation explanations
 
-## AI-Assisted Decision Support
+The purpose of AI is not to replace optimization unnecessarily.
 
-The long-term goal is to develop an AI-assisted procurement decision-support layer.
+Instead, AI should provide additional predictive information that improves the quality of procurement decisions.
 
-The system is not intended to replace procurement professionals.
+---
 
-Instead, it is designed to help procurement teams:
+# Decision-Support Vision
 
-- Compare suppliers
-- Identify cost drivers
-- Detect procurement risks
-- Evaluate sourcing scenarios
-- Generate purchasing recommendations
-- Explain the factors behind a recommendation
+The long-term system is intended to become a procurement Decision Support System rather than a simple analytics notebook.
 
-The AI layer will be developed after the underlying procurement and optimization logic has been validated.
+A future recommendation could look conceptually like:
 
-## Current Limitations
+Recommended Procurement Allocation
 
-The current version is an early-stage procurement model.
+Supplier A: 55%
+Supplier B: 30%
+Supplier C: 15%
 
-Important limitations include:
+Expected Cost: €XXX
 
-- Limited sample data
-- Preliminary risk assumptions
-- No historical supplier performance dataset
-- No statistical validation of risk scores
-- No automated supplier optimization yet
-- No machine-learning model in the current Excel version
+Risk Level: Medium
 
-These limitations are intentionally documented so that future development can be measured against a clear baseline.
+Key Reasons:
 
-## Roadmap
+- Competitive landed cost
+- Acceptable MOQ
+- Better lead-time profile
+- Supplier diversification
+- Lower expected disruption exposure
 
-### Phase 1 — Excel MVP
-- [x] Procurement dataset
-- [x] MOQ validation
-- [x] Currency normalization
-- [x] Price range calculation
-- [x] Shipping cost per unit
-- [x] Landed cost calculation
-- [x] Preliminary source risk scoring
+The system should provide both the recommendation and the reasoning behind it.
 
-### Phase 2 — Python Analytics
-- [ ] Data cleaning
-- [ ] Automated normalization
-- [ ] Supplier scoring
-- [ ] Supplier ranking
-- [ ] Scenario analysis
-- [ ] Visualization
+---
 
-### Phase 3 — Optimization
-- [ ] Procurement constraints
-- [ ] Cost optimization
-- [ ] Supplier allocation
-- [ ] Sensitivity analysis
-- [ ] What-if scenarios
+# Business Objective
 
-### Phase 4 — AI-Assisted Procurement
-- [ ] Recommendation engine
-- [ ] Natural-language procurement analysis
-- [ ] Explainable recommendations
-- [ ] Automated procurement insights
+The business objective is to help procurement organizations make faster, more transparent, and more economically efficient sourcing decisions.
 
-## Technologies
+Potential benefits include:
 
-Current:
+- Lower total procurement cost
+- Better supplier allocation
+- Reduced supply disruption exposure
+- Improved procurement transparency
+- Better use of supplier capacity
+- More consistent decision-making
+- Reduced dependency on manual spreadsheet analysis
+- Improved visibility into cost and risk trade-offs
 
-- Microsoft Excel
-- Procurement / International Trade concepts
+---
 
-Planned:
+# Competitive Differentiation
 
+The project is not positioned as a generic supplier comparison tool.
+
+The intended differentiation is the combination of:
+
+- Procurement data processing
+- Landed-cost modeling
+- Mathematical optimization
+- Supplier constraints
+- Risk-aware decision-making
+- Future predictive analytics
+- Explainable recommendations
+- Potential enterprise / ERP integration
+
+The central concept is:
+
+> Optimize the procurement decision, not simply the supplier price.
+
+---
+
+# Target Users
+
+Potential target users include:
+
+- Procurement departments
+- Supply chain teams
+- Manufacturing companies
+- Automotive suppliers
+- Electronics manufacturers
+- Industrial companies
+- Procurement consulting teams
+- Companies managing multiple international suppliers
+
+The architecture is intended to remain industry-flexible even though the current project uses automotive electronic components as its primary demonstration domain.
+
+---
+
+# Data Strategy
+
+The project is designed to work with structured procurement and supplier data such as:
+
+- Supplier prices
+- Currency rates
+- MOQ
+- Order quantities
+- Lead times
+- Shipping costs
+- Supplier performance
+- Quality information
+- Risk indicators
+- Demand
+- Capacity
+- Historical purchasing data
+
+Future versions may incorporate automatically refreshed external data sources and enterprise data.
+
+---
+
+# Technology Stack
+
+Current and planned technologies include:
+
+- Excel
 - Python
-- Pandas
-- NumPy
-- Optimization libraries
-- Data visualization
-- Machine Learning / AI
+- pandas
+- Mathematical Optimization
+- Machine Learning
+- Artificial Intelligence
+- APIs
+- ERP / SAP Integration
 
-## Project Status
+The technology stack will evolve according to business requirements rather than technical complexity alone.
 
-**Current status: Excel MVP completed.**
+---
 
-The next development stage is the Python analytics and optimization layer.
+# Product Development Philosophy
 
-## Author
+The project follows a business-first development approach.
 
-Developed as a personal portfolio project focused on the intersection of:
+The objective is not to build a technically complex system simply because advanced technologies are available.
 
-- Procurement
-- International Trade
-- Data Analytics
-- Optimization
-- AI-assisted Decision Support
+Instead, each technology should solve a specific business problem.
+
+The development sequence therefore prioritizes:
+
+Reliable Data
+      ↓
+Correct Calculations
+      ↓
+Optimization
+      ↓
+Risk Modeling
+      ↓
+Prediction
+      ↓
+AI-Assisted Decisions
+      ↓
+Enterprise Integration
+
+This approach aims to create a system that can be evaluated based on measurable business value.
+
+---
+
+# Current Status
+
+Completed:
+
+- Excel Data Foundation
+- Supplier Dataset Structure
+- Data Standardization
+- Python Data Ingestion
+- Data Inspection
+- Currency Normalization
+- Price Range Calculation
+- Shipping Cost per Unit
+- Landed Cost Modeling
+- Automated MOQ Validation
+
+Next:
+
+- Mathematical Optimization
+- Procurement Allocation Model
+- Constraint Modeling
+- Optimization Validation
+
+Future:
+
+- Risk-Aware Optimization
+- Machine Learning
+- AI Decision Support
+- API / MVP
+- ERP / SAP Integration
+
+---
+
+# Long-Term Vision
+
+The long-term vision is to develop an intelligent procurement decision-support platform capable of continuously evaluating supplier, cost, logistics, demand, and risk information and transforming that information into actionable procurement recommendations.
+
+The system should ultimately answer three key questions:
+
+Where should we buy?
+
+How much should we buy?
+
+Why is this the recommended decision?
+
+The goal is to transform procurement from a largely manual supplier-selection process into a data-driven, constraint-aware, and explainable decision-making process.
+
+---
+
+# Project Status
+
+The project is currently transitioning from the Python data-processing stage into the Mathematical Optimization stage.
+
+The next milestone is to build and validate the first procurement allocation optimization model using the structured supplier dataset.
+
+Excel Foundation          ✓
+Python Processing         ✓
+Cost Modeling             ✓
+MOQ Validation            ✓
+Mathematical Optimization →
+Risk-Aware Optimization   →
+ML / AI                   →
+API / MVP                 →
+ERP / SAP Integration     →
