@@ -1,0 +1,169 @@
+import pandas as pd
+
+# ============================================
+# AI-Assisted Automotive Procurement Optimization
+# Phase 2 - Python Data Processing
+# ============================================
+
+
+# ============================================
+# 1. Load Excel Data
+# ============================================
+
+file_path = "automotive_supplier_data.xlsx"
+
+df = pd.read_excel(
+    file_path,
+    sheet_name="Sheet1"
+)
+
+print("File Loaded Successfully!")
+print("Rows:", len(df))
+print("Columns:", len(df.columns))
+
+
+# ============================================
+# 2. Standardize Column Names
+# ============================================
+
+df.columns = (
+    df.columns
+    .str.strip()
+    .str.lower()
+    .str.replace(" ", "_")
+    .str.replace("-", "_")
+)
+
+print("\nStandardized Columns:")
+print(df.columns.tolist())
+
+
+# ============================================
+# 3. Basic Data Inspection
+# ============================================
+
+print("\nData Information:")
+df.info()
+
+print("\nMissing Values:")
+print(df.isna().sum())
+
+
+# ============================================
+# 4. Currency Conversion to EUR
+# ============================================
+
+df["unit_price_min_eur"] = (
+    df["unit_price_min"] / df["eur_rate"]
+)
+
+df["unit_price_max_eur"] = (
+    df["unit_price_max"] / df["eur_rate"]
+)
+
+
+# ============================================
+# 5. Price Range
+# ============================================
+
+df["price_range"] = (
+    df["unit_price_max_eur"]
+    - df["unit_price_min_eur"]
+)
+
+
+# ============================================
+# 6. Shipping Cost per Unit
+# ============================================
+
+df["shipping_cost_per_unit"] = (
+    df["shipping_cost"]
+    / df["order_quantity"]
+)
+
+
+# ============================================
+# 7. Landed Cost
+# ============================================
+
+df["landed_cost_min"] = (
+    df["unit_price_min_eur"]
+    + df["shipping_cost_per_unit"]
+)
+
+df["landed_cost_max"] = (
+    df["unit_price_max_eur"]
+    + df["shipping_cost_per_unit"]
+)
+
+df["landed_cost_avg_eur"] = (
+    (
+        df["unit_price_min_eur"]
+        + df["unit_price_max_eur"]
+    ) / 2
+    + df["shipping_cost_per_unit"]
+)
+
+
+# ============================================
+# 8. MOQ Validation
+# ============================================
+
+df["moq_check"] = df.apply(
+    lambda row:
+        "OK"
+        if row["order_quantity"] >= row["moq"]
+        else "Below MOQ",
+    axis=1
+)
+
+
+# ============================================
+# 9. MOQ Summary
+# ============================================
+
+print("\nMOQ Status:")
+
+print(
+    df["moq_check"]
+    .value_counts(dropna=False)
+)
+
+
+# ============================================
+# 10. Procurement Cost Summary
+# ============================================
+
+print("\nProcurement Cost Summary:")
+
+print(
+    df[
+        [
+            "supplier",
+            "order_quantity",
+            "moq",
+            "unit_price_min_eur",
+            "unit_price_max_eur",
+            "shipping_cost_per_unit",
+            "landed_cost_min",
+            "landed_cost_max",
+            "landed_cost_avg_eur",
+            "moq_check"
+        ]
+    ]
+)
+
+
+# ============================================
+# 11. Final Dataset Preview
+# ============================================
+
+print("\nFinal Dataset:")
+print(df)
+
+
+# ============================================
+# 12. Completion Message
+# ============================================
+
+print("\nPython Data Processing Completed Successfully!")
